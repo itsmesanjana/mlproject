@@ -19,6 +19,3 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-if __name__ == "__main__":
-    logging.info("Logging has started")
-    print(f"Logs will be saved in: {LOG_FILE_PATH}")
