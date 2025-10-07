@@ -32,7 +32,7 @@ class ModelTrainer:
     def initiate_model_trainer(self, train_array, test_array):
         try:
             logging.info('Splitting Dependent and Independent avriables from train and test data')
-            xtrain,ytrain,xtest,ytest=(
+            X_train,y_train,X_test,y_test=(
                 train_array[:,:-1],
                 train_array[:,-1],
                 test_array[:,:-1],
@@ -47,12 +47,13 @@ class ModelTrainer:
                 "XGB Regressor": XGBRegressor(),
                 "CatBoosting Regressor": CatBoostRegressor(verbose=False),
                 "AdaBoost Regressor": AdaBoostRegressor(),
-                "Ridge": Ridge(),
-                "Lasso": Lasso(),
-                "SVR": SVR()
+                # "Ridge": Ridge(),
+                # "Lasso": Lasso(),
+                # "SVR": SVR()
             }
             
-            model_report:dict = evaluate_models(xtrain,ytrain,xtest,ytest,models)
+            model_report:dict = evaluate_models(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,
+                                                models=models)
             print(model_report)
             print('\n====================================================================================\n')
             logging.info(f'Model Report : {model_report}')
@@ -71,79 +72,71 @@ class ModelTrainer:
             logging.info(f'Best Model Found,Model Name: {best_model_name},R2 Score : {best_model_score}')
             logging.info('Hyperparameter tuning started for catboost')
 
-            # Hyperparameter tuning on Catboost
-            # Initializing catboost
-            cbr = CatBoostRegressor(verbose=False)
+            # # Hyperparameter tuning on Catboost
+            # # Initializing catboost
+            # cbr = CatBoostRegressor(verbose=False)
 
-            # Creating the hyperparameter grid
-            param_dist = {'depth'          : [4,5,6,7,8,9, 10],
-                          'learning_rate' : [0.01,0.02,0.03,0.04],
-                          'iterations'    : [300,400,500,600]}
+            # # Creating the hyperparameter grid
+            # param_dist = {'depth'          : [4,5,6,7,8,9, 10],
+            #               'learning_rate' : [0.01,0.02,0.03,0.04],
+            #               'iterations'    : [300,400,500,600]}
 
-            #Instantiate RandomSearchCV object
-            rscv = RandomizedSearchCV(cbr , param_dist, scoring='r2', cv =5, n_jobs=-1)
+            # #Instantiate RandomSearchCV object
+            # rscv = RandomizedSearchCV(cbr , param_dist, scoring='r2', cv =5, n_jobs=-1)
 
-            # Fit the model
-            rscv.fit(xtrain, ytrain)
+            # # Fit the model
+            # rscv.fit(xtrain, ytrain)
 
-            # Print the tuned parameters and score
-            print(f'Best Catboost parameters : {rscv.best_params_}')
-            print(f'Best Catboost Score : {rscv.best_score_}')
-            print('\n====================================================================================\n')
+            # # Print the tuned parameters and score
+            # print(f'Best Catboost parameters : {rscv.best_params_}')
+            # print(f'Best Catboost Score : {rscv.best_score_}')
+            # print('\n====================================================================================\n')
 
-            best_cbr = rscv.best_estimator_
+            # best_cbr = rscv.best_estimator_
 
-            logging.info('Hyperparameter tuning complete for Catboost')
+            # logging.info('Hyperparameter tuning complete for Catboost')
 
-            logging.info('Hyperparameter tuning started for KNN')
+            # logging.info('Hyperparameter tuning started for KNN')
 
-            # Initialize knn
-            knn = KNeighborsRegressor()
+            # # Initialize knn
+            # knn = KNeighborsRegressor()
 
-            # parameters
-            k_range = list(range(2, 31))
-            param_grid = dict(n_neighbors=k_range)
+            # # parameters
+            # k_range = list(range(2, 31))
+            # param_grid = dict(n_neighbors=k_range)
 
-            # Fitting the cvmodel
-            grid = GridSearchCV(knn, param_grid, cv=5, scoring='r2',n_jobs=-1)
-            grid.fit(xtrain, ytrain)
+            # # Fitting the cvmodel
+            # grid = GridSearchCV(knn, param_grid, cv=5, scoring='r2',n_jobs=-1)
+            # grid.fit(xtrain, ytrain)
 
-            # Print the tuned parameters and score
-            print(f'Best KNN Parameters : {grid.best_params_}')
-            print(f'Best KNN Score : {grid.best_score_}')
-            print('\n====================================================================================\n')
+            # # Print the tuned parameters and score
+            # print(f'Best KNN Parameters : {grid.best_params_}')
+            # print(f'Best KNN Score : {grid.best_score_}')
+            # print('\n====================================================================================\n')
 
-            best_knn = grid.best_estimator_
+            # best_knn = grid.best_estimator_
 
-            logging.info('Hyperparameter tuning Complete for KNN')
+            # logging.info('Hyperparameter tuning Complete for KNN')
 
-            logging.info('Voting Regressor model training started')
+            # logging.info('Voting Regressor model training started')
 
-            # Creating final Voting regressor
-            er = VotingRegressor([('cbr',best_cbr),('xgb',XGBRegressor()),('knn',best_knn)], weights=[3,2,1])
-            er.fit(xtrain, ytrain)
-            print('Final Model Evaluation :\n')
-            print_evaluated_results(xtrain,ytrain,xtest,ytest,er)
-            logging.info('Voting Regressor Training Completed')
+            # # Creating final Voting regressor
+            # er = VotingRegressor([('cbr',best_cbr),('xgb',XGBRegressor()),('knn',best_knn)], weights=[3,2,1])
+            # er.fit(xtrain, ytrain)
+            # print('Final Model Evaluation :\n')
+            # print_evaluated_results(xtrain,ytrain,xtest,ytest,er)
+            # logging.info('Voting Regressor Training Completed')
 
             save_object(
                 file_path=self.model_trainer_config.trained_model_file_path,
-                obj = er
+                obj =best_model
             )
-            logging.info('Model pickle file saved')
-            # Evaluating Ensemble Regressor (Voting Classifier on test data)
-            ytest_pred = er.predict(xtest)
-
-            mae, rmse, r2 = model_metrics(ytest, ytest_pred)
-            logging.info(f'Test MAE : {mae}')
-            logging.info(f'Test RMSE : {rmse}')
-            logging.info(f'Test R2 Score : {r2}')
-            logging.info('Final Model Training Completed')
-            
-            return mae, rmse, r2 
-        
+            predicted=best_model.predict(X_test)
+            r2_square = r2_score(y_test,predicted)
+            # mae, rmse, r2 = model_metrics(y_test, predicted) 
+            return r2_square   
         except Exception as e:
-            logging.info('Exception occured at Model Training')
+            # logging.info('Exception occured at Model Training')
             raise CustomException(e,sys)
 
 # ... existing code ...
