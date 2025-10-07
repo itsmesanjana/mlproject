@@ -1,4 +1,10 @@
-pandas
 numpy
+pandas
+matplotlib
 seaborn
--e .
+scikit-learn
+ipykernel
+catboost
+xgboost
+dill
+# -e .
