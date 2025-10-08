@@ -31,13 +31,13 @@ class DataTransformation:
                 "test_preparation_course",
             ]
             
-            numerical_pipeline = Pipeline(
+            num_pipeline = Pipeline(
                 steps=[
                     ("impouter", SimpleImputer(strategy="median")),
                     ("scaler", StandardScaler())
                 ]
             )
-            categorical_pipeline = Pipeline(
+            cat_pipeline = Pipeline(
                 steps=[
                     ("imputer", SimpleImputer(strategy="most_frequent")),
                     ("one_hot_encoder", OneHotEncoder()),
@@ -49,8 +49,8 @@ class DataTransformation:
             logging.info(f"Categorical columns: {categorical_columns}")
             preprocessor = ColumnTransformer(
                 [
-                    ("num_pipeline", numerical_pipeline, numerical_columns),
-                    ("cat_pipelines", categorical_pipeline, categorical_columns)
+                    ("num_pipeline", num_pipeline, numerical_columns),
+                    ("cat_pipelines", cat_pipeline, categorical_columns)
                 ]
             )
             
@@ -105,6 +105,6 @@ class DataTransformation:
             logging.info("Exception occured in the initiate_data_transformation")
             raise CustomException(e, sys)
 
-if __name__ == "__main__":
-    obj = DataTransformation()
-    obj.initiate_data_transformation("artifacts/train.csv", "artifacts/test.csv")
+# if __name__ == "__main__":
+#     obj = DataTransformation()
+#     obj.initiate_data_transformation("artifacts/train.csv", "artifacts/test.csv")
