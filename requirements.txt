@@ -7,4 +7,6 @@ ipykernel
 catboost
 xgboost
 dill
+# web server
+flask
 # -e .
